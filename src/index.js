@@ -7,7 +7,8 @@ const $fen = $('#fen')
 const $pgn = $('#pgn')
 const $nextMoves = $('#nextMoves');
 const $lastMove = $('#lastMove');
-const allPgns = getPgns(pgnGames);
+let allPgns = getPgns(pgnGames);
+allPgns = allPgns.filter(pgn => pgn.indexOf('[White "fosterdill"]') !== -1);
 const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
 let currentNode;
 let moveCounter = 0;
@@ -41,9 +42,9 @@ class Node {
 }
 
 class Edge {
-  constructor (value) {
+  constructor (value, data = {}) {
     this.value = value
-    this.data = {};
+    this.data = data;
   }
 }
 class Graph {
@@ -51,7 +52,8 @@ class Graph {
     this.nodes = {};
     this.nodeChildren = {};
     this.nodeParents = {};
-    this.nodeEdges = {};
+    this.childEdgeToNodes = {};
+    this.childEdges = {};
     this.leafNodes = {};
   }
 
@@ -60,7 +62,11 @@ class Graph {
   }
 
   getEdges(label) {
-    return this.nodeEdges[label];
+    return this.childEdgeToNodes[label];
+  }
+
+  getChildEdges(parentValue) {
+    return Object.values(this.childEdges[parentValue]);
   }
 
   addEdge(parentValue, childValue, edge) {
@@ -83,15 +89,26 @@ class Graph {
       this.nodeParents[childValue].push(this.nodes[parentValue]);
     }
 
-    if (!(parentValue in this.nodeEdges)) {
-      this.nodeEdges[parentValue] = {[edge.value]: this.nodes[childValue]};
+    if (!(parentValue in this.childEdgeToNodes)) {
+      this.childEdgeToNodes[parentValue] = {[edge.value]: this.nodes[childValue]};
     } else {
-      this.nodeEdges[parentValue][edge.value] = this.nodes[childValue];
+      this.childEdgeToNodes[parentValue][edge.value] = this.nodes[childValue];
+    }
+
+    if (!(parentValue in this.childEdges)) {
+      this.childEdges[parentValue] = {[childValue]: edge};
+    } else if (!(childValue in this.childEdges[parentValue])) {
+      this.childEdges[parentValue][childValue] = edge;
+    } else {
+      this.childEdges[parentValue][childValue].data.won += edge.data.won;
+      this.childEdges[parentValue][childValue].data.lost += edge.data.lost;
+      this.childEdges[parentValue][childValue].data.total += edge.data.total;
     }
 
     if (!(childValue in this.nodeChildren)) {
       this.leafNodes[childValue] = this.nodes[childValue];
     }
+
 
     if (parentValue in this.leafNodes) {
       delete this.leafNodes[parentValue];
@@ -107,6 +124,9 @@ const graph = new Graph();
 
 for (let pgn of allPgns) {
   chessObj.load_pgn(pgn);
+  chessObj.won = pgn.indexOf('fosterdill won') !== -1;
+  chessObj.lost = pgn.indexOf('fosterdill won') === -1;
+  chessObj.drawn = pgn.indexOf('drawn') === -1;
   addEdgesFromPgn(chessObj, graph);
 }
 
@@ -142,7 +162,14 @@ function addEdgesFromPgn(chessObj, graphRef) {
       fens.push(newGame.fen());
     }
     for (var i = 0; i < moves.length; i++) {
-      graphRef.addEdge(fens[i], fens[i + 1], new Edge(getMoveName(i, moves[i])));
+      graphRef.addEdge(
+        fens[i],
+        fens[i + 1], 
+        new Edge(
+          getMoveName(i, moves[i]),
+          { won: chessObj.won ? 1 : 0, lost: chessObj.lost ? 1 : 0, drawn: chessObj.drawn ? 1 : 0, total: 1 }
+          )
+        );
     }
 }
 
@@ -203,8 +230,19 @@ function updateStatus (move) {
   $pgn.html(game.pgn())
   if (move) {
     moveCounter++;
-    currentNode = graph.getEdges(currentNode.data.name)[lastMoveName];
-    $nextMoves.html(Object.keys(graph.getEdges(currentNode.data.name)).join('\n'));
+      currentNode = graph.getEdges(currentNode.data.name)[lastMoveName];
+      $nextMoves.html(
+        graph.getChildEdges(currentNode.data.name).map(edge => 
+          edge.value + 
+          ' (W: ' + 
+          Math.round(100 * edge.data.won/edge.data.total)+ 
+          '%) (L: ' + 
+          Math.round(100 * edge.data.lost/edge.data.total)+
+          '%) (T: ' +
+          edge.data.total +
+          ') <br />'
+
+        ))
   }
 }
 
