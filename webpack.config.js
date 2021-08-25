@@ -11,6 +11,14 @@ module.exports = {
  devServer: {
    static: './dist',
  },
+ module: {
+ rules: [
+  {
+    test: /\.pgn/i,
+    use: 'raw-loader',
+  },
+  ],
+},
  plugins: [
    new HtmlWebpackPlugin({
      title: 'Development',
