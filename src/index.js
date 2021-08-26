@@ -1,8 +1,10 @@
 import Chess from "chess.js";
+import localForage from "localforage";
 import { fetchAllGames } from "./fetches";
 import { START_FEN, getMoveName } from "./utils";
 import { createNode } from "./data-structures";
 import { addGame } from "./data-structures";
+import { setup } from "./idb";
 
 const game = new Chess();
 const $status = $("#status");
@@ -10,6 +12,7 @@ const $fen = $("#fen");
 const $pgn = $("#pgn");
 const $nextMoves = $("#nextMoves");
 const $lastMove = $("#lastMove");
+const $progress = $("#progress");
 
 let currentNode;
 let moveCounter = 0;
@@ -94,30 +97,65 @@ function updateStatus(move) {
 }
 
 const main = async () => {
-  const allGames = await fetchAllGames("fosterdill");
+  setup();
+  const username = window.location.hash.slice(1);
 
-  let nodes = {};
-  const root = createNode(START_FEN);
-  nodes[START_FEN] = root;
+  let nodes = await localForage.getItem(`${username}_nodes`);
 
-  for (let game of allGames) {
-    addGame(game, nodes);
+  if (!nodes) {
+    $progress.html("Downloading...");
+    const worker = new Worker(
+      new URL("./workers/build-graph", import.meta.url)
+    );
+    worker.postMessage({ username });
+    worker.onmessage = ({ data: { nodes, done, percentage } }) => {
+      if (done) {
+        $progress.html("");
+        nodes = nodes;
+        localForage.setItem(`${username}_nodes`, nodes);
+
+        const root = nodes[START_FEN];
+
+        const config = {
+          pieceTheme:
+            "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
+          draggable: true,
+          position: "start",
+          onDragStart: onDragStart,
+          onDrop: onDrop,
+          onSnapEnd: onSnapEnd,
+        };
+        board = Chessboard("board", config);
+
+        currentNode = root;
+
+        updateStatus();
+      } else {
+        $progress.html(`Loading... ${percentage}% done.`);
+      }
+    };
+  } else {
+    $progress.html("");
+    nodes = nodes;
+    localForage.setItem(`${username}_nodes`, nodes);
+
+    const root = nodes[START_FEN];
+
+    const config = {
+      pieceTheme:
+        "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
+      draggable: true,
+      position: "start",
+      onDragStart: onDragStart,
+      onDrop: onDrop,
+      onSnapEnd: onSnapEnd,
+    };
+    board = Chessboard("board", config);
+
+    currentNode = root;
+
+    updateStatus();
   }
-
-  const config = {
-    pieceTheme:
-      "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
-    draggable: true,
-    position: "start",
-    onDragStart: onDragStart,
-    onDrop: onDrop,
-    onSnapEnd: onSnapEnd,
-  };
-  board = Chessboard("board", config);
-
-  currentNode = root;
-
-  updateStatus();
 };
 
 main();
