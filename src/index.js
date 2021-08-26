@@ -17,6 +17,7 @@ const $progress = $("#progress");
 let currentNode;
 let moveCounter = 0;
 let board = null;
+const moveHistory = [];
 
 function onDragStart(source, piece, position, orientation) {
   // do not pick up pieces if the game is over
@@ -89,11 +90,26 @@ function updateStatus(move) {
 
   if (move) {
     moveCounter++;
-    currentNode = currentNode.edges[lastMoveName].to;
-    $nextMoves.html(
-      Object.keys(currentNode.edges).map((move) => `${move} <br />`)
-    );
+
+    if (lastMoveName in currentNode.edges) {
+      moveHistory.push(currentNode);
+      currentNode = currentNode.edges[lastMoveName].to;
+    } else {
+      $nextMoves.html("No positions found");
+    }
   }
+  $nextMoves.html(
+    Object.keys(currentNode.edges).map((move) => {
+      const { win, total } = currentNode.edges[move].accum;
+      const winPercentage = Math.round((100 * win) / total);
+      return `
+        ${move} (won ${winPercentage}% of ${total}) 
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: ${winPercentage}%" aria-valuenow="${winPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      `;
+    })
+  );
 }
 
 const main = async () => {
@@ -156,6 +172,17 @@ const main = async () => {
 
     updateStatus();
   }
+
+  $(document).ready(() => {
+    $("#previousmove").click((event) => {
+      event.preventDefault();
+      currentNode = moveHistory.pop();
+      moveCounter--;
+      game.undo();
+      board.position(game.fen());
+      updateStatus();
+    });
+  });
 };
 
 main();

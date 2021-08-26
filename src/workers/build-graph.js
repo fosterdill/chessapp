@@ -8,12 +8,14 @@ self.onmessage = ({ data: { username } }) => {
 
 const main = async (username) => {
 	const nodes = {};
-	const allGames = await fetchAllGames(username);
+	const color = "white";
+	let allGames = await fetchAllGames(username);
+	allGames = allGames.filter((game) => game.white.username === username);
 
 	nodes[START_FEN] = createNode(START_FEN);
 
 	for (let [index, game] of allGames.entries()) {
-		addGame(game, nodes);
+		addGame(game, nodes, username, color);
 
 		const percentage = Math.round((100 * index) / allGames.length);
 		if (percentage % 20 === 0) {

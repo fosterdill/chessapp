@@ -2,7 +2,7 @@ import { addEdge, createNode } from "./graph";
 import Chess from "chess.js";
 import { START_FEN, getMoveName } from "../utils";
 
-export const addGame = (game, nodes) => {
+export const addGame = (game, nodes, username, color) => {
 	const chessObj = new Chess();
 	chessObj.load_pgn(game.pgn);
 	const moves = chessObj.history();
@@ -30,6 +30,12 @@ export const addGame = (game, nodes) => {
 		const fen = fens[i];
 		const nextFen = fens[i + 1];
 
-		addEdge(getMoveName(i, moves[i]), nodes[fen], nodes[nextFen]);
+		addEdge(getMoveName(i, moves[i]), nodes[fen], nodes[nextFen], {
+			win:
+				game[color].username === username && game[color].result === "win"
+					? 1
+					: 0,
+			total: 1,
+		});
 	}
 };

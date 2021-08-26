@@ -20,8 +20,8 @@ export const addEdge = (name, from, to, accum = {}) => {
   if (!(name in from.edges)) {
     from.edges[name] = edge;
   } else {
-    for (let v in from.edges[name].data) {
-      from.edges[name][v] += edge[v];
+    for (let v in from.edges[name].accum) {
+      from.edges[name].accum[v] += edge.accum[v];
     }
   }
 

@@ -3,7 +3,7 @@
   <head>
     <style>
       #board {
-        max-width: 50%;
+        width: 50%;
       }
     </style>
     <meta charset="utf-8" />
@@ -36,9 +36,16 @@
   </head>
   <body>
     <div id="progress"></div>
-    <div id="board"></div>
+    <div style="display: flex; width: 100%">
+      <div id="board"></div>
+      <div>
+        <button id="previousmove" type="button" class="btn btn-primary">
+          < Previous move
+        </button>
+        <div id="nextMoves"></div>
+      </div>
+    </div>
     <div id="status"></div>
-    <div id="nextMoves"></div>
     <div id="lastMove"></div>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.bundle.min.js"
