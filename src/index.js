@@ -4,7 +4,7 @@ import { fetchAllGames } from "./fetches";
 import { START_FEN, getMoveName } from "./utils";
 import { createNode } from "./data-structures";
 import { addGame } from "./data-structures";
-import { setup } from "./idb";
+import { setupStorage } from "./idb";
 
 const game = new Chess();
 const $status = $("#status");
@@ -111,66 +111,51 @@ function updateStatus(move) {
     })
   );
 }
+const setupChessboard = (nodes, username) => {
+  $progress.html("");
+  localForage.setItem(`${username}_nodes`, nodes);
+
+  const root = nodes[START_FEN];
+
+  const config = {
+    pieceTheme:
+      "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
+    draggable: true,
+    position: "start",
+    onDragStart: onDragStart,
+    onDrop: onDrop,
+    onSnapEnd: onSnapEnd,
+  };
+  board = Chessboard("board", config);
+
+  currentNode = root;
+
+  updateStatus();
+};
 
 const main = async () => {
-  setup();
+  setupStorage();
+
   const username = window.location.hash.slice(1);
 
-  let nodes = await localForage.getItem(`${username}_nodes`);
+  let allNodes = await localForage.getItem(`${username}_nodes`);
 
-  if (!nodes) {
+  if (!allNodes) {
     $progress.html("Downloading...");
     const worker = new Worker(
       new URL("./workers/build-graph", import.meta.url)
     );
-    worker.postMessage({ username });
+    worker.postMessage({ username, color: "white" });
     worker.onmessage = ({ data: { nodes, done, percentage } }) => {
+      allNodes = nodes;
       if (done) {
-        $progress.html("");
-        nodes = nodes;
-        localForage.setItem(`${username}_nodes`, nodes);
-
-        const root = nodes[START_FEN];
-
-        const config = {
-          pieceTheme:
-            "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
-          draggable: true,
-          position: "start",
-          onDragStart: onDragStart,
-          onDrop: onDrop,
-          onSnapEnd: onSnapEnd,
-        };
-        board = Chessboard("board", config);
-
-        currentNode = root;
-
-        updateStatus();
+        setupChessboard(nodes, username);
       } else {
         $progress.html(`Loading... ${percentage}% done.`);
       }
     };
   } else {
-    $progress.html("");
-    nodes = nodes;
-    localForage.setItem(`${username}_nodes`, nodes);
-
-    const root = nodes[START_FEN];
-
-    const config = {
-      pieceTheme:
-        "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
-      draggable: true,
-      position: "start",
-      onDragStart: onDragStart,
-      onDrop: onDrop,
-      onSnapEnd: onSnapEnd,
-    };
-    board = Chessboard("board", config);
-
-    currentNode = root;
-
-    updateStatus();
+    setupChessboard(allNodes, username);
   }
 
   $(document).ready(() => {
