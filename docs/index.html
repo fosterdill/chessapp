@@ -5,6 +5,21 @@
       #board {
         width: 50%;
       }
+
+      #boardcontainer {
+        width:  100%;
+        display:  flex;
+      }
+      @media only screen and (max-width: 800px) {
+        #boardcontainer {
+          flex-direction:  column;
+        }
+
+        #board {
+          width:  100%;
+        }
+      }
+
     </style>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -36,7 +51,7 @@
   <script defer src="index.bundle.js"></script></head>
   <body>
     <div id="progress"></div>
-    <div style="display: flex; width: 100%">
+    <div id="boardcontainer">
       <div id="board"></div>
       <div>
         <button id="previousmove" type="button" class="btn btn-primary">
