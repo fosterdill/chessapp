@@ -16,6 +16,7 @@ const $bestMove = $("#bestMove");
 const $adv = $("#adv");
 const $progress = $("#progress");
 let stockfish = new Worker("stockfish.js");
+let waitingCommands = [];
 
 let currentNode;
 let moveCounter = 0;
@@ -26,9 +27,16 @@ function getPosition(string, subString, index) {
   return string.split(subString, index).join(subString).length;
 }
 const stockfishHandler = ({ data }) => {
+  if (data === "readyok") {
+    waitingCommands.shift().forEach((command) => {
+      setTimeout(() => {
+        stockfish.postMessage(command);
+      }, 50);
+    });
+  }
   const start = data.indexOf("depth") + 6;
   const depth = data.slice(start, start + 2);
-  const cpScoreMatch = data.match(/cp\s([1-9]+)\s/);
+  const cpScoreMatch = data.match(/cp\s(\-?[1-9]+)\s/);
   let cp;
   if (cpScoreMatch) {
     cp = Number(cpScoreMatch[1]) / 100;
@@ -42,7 +50,9 @@ const stockfishHandler = ({ data }) => {
   } else {
     const movesList = data.slice(getPosition(data, "pv", 2)).slice(3);
     const algebraicNames = getAlgebraicNames(game.fen(), movesList.split(" "));
-    $bestMove.html(`${algebraicNames}`);
+    if (algebraicNames[0]) {
+      $bestMove.html(`${algebraicNames}`);
+    }
   }
 };
 
@@ -75,7 +85,6 @@ function onDragStart(source, piece, position, orientation) {
 }
 
 function onDrop(source, target) {
-  console.log(source, target);
   // see if the move is legal
   const move = game.move({
     from: source,
@@ -105,14 +114,28 @@ const getAlgebraicName = (engineName, fen) => {
   });
   return game.history().pop();
 };
+function get_moves() {
+  var moves = "";
+  var history = game.history({ verbose: true });
+
+  for (var i = 0; i < history.length; ++i) {
+    var move = history[i];
+    moves += " " + move.from + move.to + (move.promotion ? move.promotion : "");
+  }
+
+  return moves;
+}
+
+const waitForIsReady = (...commands) => {
+  waitingCommands.push(commands);
+  stockfish.postMessage("stop");
+  stockfish.postMessage("isready");
+};
 
 const evalFen = (fen) => {
   $bestMove.html("...");
-  // stockfish.postMessage("setoption name MultiPV value 1");
 
-  stockfish.postMessage("stop");
-  stockfish.postMessage(`position fen ${fen}`);
-  stockfish.postMessage("go depth 20");
+  waitForIsReady(`position startpos moves${get_moves()}`, "go depth 18");
 };
 const sortByTotal = (edge1, edge2) => edge2.accum.total - edge1.accum.total;
 
@@ -202,8 +225,9 @@ const setupChessboard = (nodes, username, color) => {
   const root = nodes[START_FEN];
 
   const config = {
-    pieceTheme:
-      "https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png",
+    pieceTheme: (piece) => {
+      return require(`./images/${piece}.png`);
+    },
     draggable: true,
     position: "start",
     onDragStart: onDragStart,
@@ -222,10 +246,10 @@ const main = async () => {
   const color = "black";
   setupStorage();
   stockfish.onmessage = stockfishHandler;
-  // stockfish1.postMessage("setoption name MultiPV value 1");
+  stockfish.postMessage("setoption name Use NNUE value true");
 
-  stockfish.postMessage(`position startposition`);
-  stockfish.postMessage("go depth 20");
+  stockfish.postMessage(`position startpos`);
+  stockfish.postMessage("go depth 18");
 
   const username = window.location.hash.slice(1);
 

@@ -11,12 +11,20 @@ module.exports = {
   devtool: "inline-source-map",
   devServer: {
     static: "./docs",
+    headers: {
+      "Cross-Origin-Opener-Policy": "same-origin",
+      "Cross-Origin-Embedder-Policy": "require-corp",
+    },
   },
   module: {
     rules: [
       {
         test: /\.pgn/i,
         use: "raw-loader",
+      },
+      {
+        test: /\.png/i,
+        type: "asset/resource",
       },
     ],
   },

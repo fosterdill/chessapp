@@ -8,7 +8,7 @@
     "chess.js": "^0.12.0",
     "jquery": "^3.6.0",
     "localforage": "^1.10.0",
-    "stockfish": "git://github.com/nmrugg/stockfish.js.git#Stockfish11",
+    "stockfish": "^12.0.0",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0"
   },
