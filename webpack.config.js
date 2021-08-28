@@ -34,6 +34,9 @@ module.exports = {
         {
           from: "./node_modules/stockfish/src",
         },
+        {
+          from: "./netlify-config",
+        },
       ],
     }),
     new HtmlWebpackPlugin({
