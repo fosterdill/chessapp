@@ -23,7 +23,7 @@
 				won: accum.win
 			}
 		})
-		nextMoves = nextMoves.sortBy((move, move2) => move2.total - move.total)
+		nextMoves = nextMoves.sort((move, move2) => move2.total - move.total)
 
 	}
 	onMount(async () => {
