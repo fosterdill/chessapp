@@ -1,0 +1,59 @@
+<script>
+	import { onMount } from 'svelte';
+	import { writable } from 'svelte/store'
+	import setupAnalyzer from './setupAnalyzer';
+	let adv;
+	let bMoves;
+	let bMove;
+	let nextMoves = [];
+
+	const handleStockfishUpdate = ({ bestMoves, bestMove, cp }) => {
+		if (cp) adv = cp 
+		if (bestMoves) bMoves = bestMoves;
+		if (bestMove) bMove = bestMove;
+	}
+
+	const handleNodeUpdate = (node) => {
+		nextMoves = Object.values(node.edges).map(({ name, accum }) => {
+			return {
+				name,
+				winPercentage: Math.round(100 * accum.win / accum.total),
+				winPercentageStyle: `width: ${Math.round(100 * accum.win / accum.total)}%`,
+				total: accum.total,
+				won: accum.win
+			}
+		})
+
+	}
+	onMount(async () => {
+		setupAnalyzer(handleStockfishUpdate, handleNodeUpdate);
+	})
+</script>
+
+<main>
+    <div id="adv">{adv}</div>
+    <div id="bestMove">{bMoves}</div>
+    <div class="wrapper">
+      <div id="progress"></div>
+      <div id="boardcontainer">
+        <div id="board"></div>
+        <div>
+          <button id="previousmove" type="button" class="btn btn-primary">
+          	Previous move
+          </button>
+          <div id="nextMoves">
+          	{#each nextMoves as { name, winPercentage, winPercentageStyle, won, total}}
+				<div>
+					{name} (won {won} out of {total})
+			        <div class="progress">
+			          <div class="progress-bar" role="progressbar" style={winPercentageStyle} aria-valuenow={winPercentage} aria-valuemin="0" aria-valuemax="100"></div>
+			        </div>
+			    </div>
+          	{/each}
+          </div>
+        </div>
+      </div>
+      <div id="status"></div>
+      <div id="lastMove"></div>
+    </div>
+</main>

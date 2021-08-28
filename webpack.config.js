@@ -2,9 +2,11 @@ const webpack = require("webpack");
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const mode = process.env.NODE_ENV || "development";
+const prod = mode === "production";
 
 module.exports = {
-  mode: "development",
+  mode,
   entry: {
     index: "./src/index.js",
   },
@@ -23,8 +25,28 @@ module.exports = {
         use: "raw-loader",
       },
       {
+        // required to prevent errors from Svelte on Webpack 5+
+        test: /node_modules\/svelte\/.*\.mjs$/,
+        resolve: {
+          fullySpecified: false,
+        },
+      },
+      {
         test: /\.png/i,
         type: "asset/resource",
+      },
+      {
+        test: /\.svelte$/,
+        use: {
+          loader: "svelte-loader",
+          options: {
+            compilerOptions: {
+              dev: !prod,
+            },
+            emitCss: prod,
+            hotReload: !prod,
+          },
+        },
       },
     ],
   },

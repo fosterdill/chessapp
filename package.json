@@ -9,6 +9,7 @@
     "jquery": "^3.6.0",
     "localforage": "^1.10.0",
     "stockfish": "^12.0.0",
+    "svelte": "^3.42.4",
     "webpack": "^5.51.1",
     "webpack-cli": "^4.8.0"
   },
@@ -17,6 +18,7 @@
     "html-webpack-plugin": "^5.3.2",
     "prettier": "2.3.2",
     "raw-loader": "^4.0.2",
+    "svelte-loader": "^3.1.2",
     "webpack-dev-server": "^4.0.0"
   },
   "scripts": {
