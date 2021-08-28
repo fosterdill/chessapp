@@ -13,6 +13,7 @@ const $pgn = $("#pgn");
 const $nextMoves = $("#nextMoves");
 const $lastMove = $("#lastMove");
 const $bestMove = $("#bestMove");
+const $adv = $("#adv");
 const $progress = $("#progress");
 let stockfish = new Worker("stockfish.js");
 
@@ -27,15 +28,21 @@ function getPosition(string, subString, index) {
 const stockfishHandler = ({ data }) => {
   const start = data.indexOf("depth") + 6;
   const depth = data.slice(start, start + 2);
-  console.log(data.match(/cp\s([1-9]+)\s/)[1]);
+  const cpScoreMatch = data.match(/cp\s([1-9]+)\s/);
+  let cp;
+  if (cpScoreMatch) {
+    cp = Number(cpScoreMatch[1]) / 100;
+    if (game.turn() === "b") {
+      cp = -cp;
+    }
+    $adv.html(cp);
+  }
   if (data.indexOf("bestmove") !== -1) {
-    $bestMove.html(
-      `Best move: ${getAlgebraicName(data.slice(9, 13), game.fen())}`
-    );
+    $bestMove.html(`⭐ ${getAlgebraicName(data.slice(9, 13), game.fen())}`);
   } else {
     const movesList = data.slice(getPosition(data, "pv", 2)).slice(3);
     const algebraicNames = getAlgebraicNames(game.fen(), movesList.split(" "));
-    $bestMove.html(`${depth} - ${algebraicNames}`);
+    $bestMove.html(`${algebraicNames}`);
   }
 };
 
@@ -107,7 +114,7 @@ const evalFen = (fen) => {
   stockfish.postMessage(`position fen ${fen}`);
   stockfish.postMessage("go depth 20");
 };
-const sortByWins = (edge1, edge2) => edge2.accum.total - edge1.accum.total;
+const sortByTotal = (edge1, edge2) => edge2.accum.total - edge1.accum.total;
 
 function updateStatus(move) {
   let status = "";
@@ -146,32 +153,47 @@ function updateStatus(move) {
   $pgn.html(game.pgn());
 
   if (move) {
-    console.log(game.fen());
     moveCounter++;
 
     if (lastMoveName in currentNode.edges) {
       moveHistory.push(currentNode);
       currentNode = currentNode.edges[lastMoveName].to;
-    } else {
-      $nextMoves.html("No positions found");
-    }
-    evalFen(game.fen());
-  }
-  $nextMoves.html(
-    Object.values(currentNode.edges)
-      .sort(sortByWins)
-      .map((edge) => {
-        const move = edge.name;
-        const { win, total } = currentNode.edges[move].accum;
-        const winPercentage = Math.round((100 * win) / total);
-        return `
+      $nextMoves.html(
+        Object.values(currentNode.edges)
+          .sort(sortByTotal)
+          .map((edge) => {
+            const move = edge.name;
+            const { win, total } = currentNode.edges[move].accum;
+            const winPercentage = Math.round((100 * win) / total);
+            return `
         ${move} (won ${winPercentage}% of ${total}) 
         <div class="progress">
           <div class="progress-bar" role="progressbar" style="width: ${winPercentage}%" aria-valuenow="${winPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
       `;
-      })
-  );
+          })
+      );
+    } else {
+      $nextMoves.html("No positions found");
+    }
+    evalFen(game.fen());
+  } else if (game.fen() === currentNode.name) {
+    $nextMoves.html(
+      Object.values(currentNode.edges)
+        .sort(sortByTotal)
+        .map((edge) => {
+          const move = edge.name;
+          const { win, total } = currentNode.edges[move].accum;
+          const winPercentage = Math.round((100 * win) / total);
+          return `
+        ${move} (won ${winPercentage}% of ${total}) 
+        <div class="progress">
+          <div class="progress-bar" role="progressbar" style="width: ${winPercentage}%" aria-valuenow="${winPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
+        </div>
+      `;
+        })
+    );
+  }
 }
 const setupChessboard = (nodes, username, color) => {
   $progress.html("");
@@ -230,12 +252,28 @@ const main = async () => {
   $(document).ready(() => {
     $("#previousmove").click((event) => {
       event.preventDefault();
-      currentNode = moveHistory.pop();
-      moveCounter--;
+      if (game.fen() === currentNode.name && moveCounter !== 0) {
+        currentNode = moveHistory.pop();
+      }
+      if (moveCounter !== 0) moveCounter--;
       game.undo();
       board.position(game.fen());
       evalFen(game.fen());
       updateStatus();
+    });
+
+    $(window).keydown((event) => {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        if (game.fen() === currentNode.name && moveCounter !== 0) {
+          currentNode = moveHistory.pop();
+        }
+        if (moveCounter !== 0) moveCounter--;
+        game.undo();
+        board.position(game.fen());
+        evalFen(game.fen());
+        updateStatus();
+      }
     });
   });
 };
