@@ -49,7 +49,7 @@ self.onmessage = ({ data: { username, color } }) => {
 const main = async (username, color) => {
   const nodes = {};
   let allGames = await fetchAllGames(username);
-  allGames = allGames.filter((game) => game.white.username === username);
+  allGames = allGames.filter((game) => game[color].username === username);
 
   nodes[START_FEN] = createNode(START_FEN);
 

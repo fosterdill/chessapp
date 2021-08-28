@@ -12,12 +12,47 @@ const $fen = $("#fen");
 const $pgn = $("#pgn");
 const $nextMoves = $("#nextMoves");
 const $lastMove = $("#lastMove");
+const $bestMove = $("#bestMove");
 const $progress = $("#progress");
+let stockfish = new Worker("stockfish.js");
 
 let currentNode;
 let moveCounter = 0;
 let board = null;
 const moveHistory = [];
+
+function getPosition(string, subString, index) {
+  return string.split(subString, index).join(subString).length;
+}
+const stockfishHandler = ({ data }) => {
+  const start = data.indexOf("depth") + 6;
+  const depth = data.slice(start, start + 2);
+  console.log(data.match(/cp\s([1-9]+)\s/)[1]);
+  if (data.indexOf("bestmove") !== -1) {
+    $bestMove.html(
+      `Best move: ${getAlgebraicName(data.slice(9, 13), game.fen())}`
+    );
+  } else {
+    const movesList = data.slice(getPosition(data, "pv", 2)).slice(3);
+    const algebraicNames = getAlgebraicNames(game.fen(), movesList.split(" "));
+    $bestMove.html(`${depth} - ${algebraicNames}`);
+  }
+};
+
+function getAlgebraicNames(fen, moves) {
+  const game = new Chess(fen);
+  const algebraicNames = [];
+
+  for (let move of moves) {
+    game.move({
+      from: move.slice(0, 2),
+      to: move.slice(2),
+    });
+    algebraicNames.push(game.history()[game.history().length - 1]);
+  }
+
+  return algebraicNames;
+}
 
 function onDragStart(source, piece, position, orientation) {
   // do not pick up pieces if the game is over
@@ -33,6 +68,7 @@ function onDragStart(source, piece, position, orientation) {
 }
 
 function onDrop(source, target) {
+  console.log(source, target);
   // see if the move is legal
   const move = game.move({
     from: source,
@@ -51,6 +87,27 @@ function onDrop(source, target) {
 function onSnapEnd() {
   board.position(game.fen());
 }
+
+const getAlgebraicName = (engineName, fen) => {
+  const game = new Chess(fen);
+  const firstPos = engineName.slice(0, 2);
+  const secondPos = engineName.slice(2);
+  game.move({
+    from: firstPos,
+    to: secondPos,
+  });
+  return game.history().pop();
+};
+
+const evalFen = (fen) => {
+  $bestMove.html("...");
+  // stockfish.postMessage("setoption name MultiPV value 1");
+
+  stockfish.postMessage("stop");
+  stockfish.postMessage(`position fen ${fen}`);
+  stockfish.postMessage("go depth 20");
+};
+const sortByWins = (edge1, edge2) => edge2.accum.total - edge1.accum.total;
 
 function updateStatus(move) {
   let status = "";
@@ -89,6 +146,7 @@ function updateStatus(move) {
   $pgn.html(game.pgn());
 
   if (move) {
+    console.log(game.fen());
     moveCounter++;
 
     if (lastMoveName in currentNode.edges) {
@@ -97,23 +155,27 @@ function updateStatus(move) {
     } else {
       $nextMoves.html("No positions found");
     }
+    evalFen(game.fen());
   }
   $nextMoves.html(
-    Object.keys(currentNode.edges).map((move) => {
-      const { win, total } = currentNode.edges[move].accum;
-      const winPercentage = Math.round((100 * win) / total);
-      return `
+    Object.values(currentNode.edges)
+      .sort(sortByWins)
+      .map((edge) => {
+        const move = edge.name;
+        const { win, total } = currentNode.edges[move].accum;
+        const winPercentage = Math.round((100 * win) / total);
+        return `
         ${move} (won ${winPercentage}% of ${total}) 
         <div class="progress">
           <div class="progress-bar" role="progressbar" style="width: ${winPercentage}%" aria-valuenow="${winPercentage}" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
       `;
-    })
+      })
   );
 }
-const setupChessboard = (nodes, username) => {
+const setupChessboard = (nodes, username, color) => {
   $progress.html("");
-  localForage.setItem(`${username}_nodes`, nodes);
+  localForage.setItem(`${username}_nodes_${color}`, nodes);
 
   const root = nodes[START_FEN];
 
@@ -127,6 +189,7 @@ const setupChessboard = (nodes, username) => {
     onSnapEnd: onSnapEnd,
   };
   board = Chessboard("board", config);
+  board.flip();
 
   currentNode = root;
 
@@ -134,28 +197,34 @@ const setupChessboard = (nodes, username) => {
 };
 
 const main = async () => {
+  const color = "black";
   setupStorage();
+  stockfish.onmessage = stockfishHandler;
+  // stockfish1.postMessage("setoption name MultiPV value 1");
+
+  stockfish.postMessage(`position startposition`);
+  stockfish.postMessage("go depth 20");
 
   const username = window.location.hash.slice(1);
 
-  let allNodes = await localForage.getItem(`${username}_nodes`);
+  let allNodes = await localForage.getItem(`${username}_nodes_${color}`);
 
   if (!allNodes) {
     $progress.html("Downloading...");
     const worker = new Worker(
       new URL("./workers/build-graph", import.meta.url)
     );
-    worker.postMessage({ username, color: "white" });
+    worker.postMessage({ username, color });
     worker.onmessage = ({ data: { nodes, done, percentage } }) => {
       allNodes = nodes;
       if (done) {
-        setupChessboard(nodes, username);
+        setupChessboard(nodes, username, color);
       } else {
         $progress.html(`Loading... ${percentage}% done.`);
       }
     };
   } else {
-    setupChessboard(allNodes, username);
+    setupChessboard(allNodes, username, color);
   }
 
   $(document).ready(() => {
@@ -165,6 +234,7 @@ const main = async () => {
       moveCounter--;
       game.undo();
       board.position(game.fen());
+      evalFen(game.fen());
       updateStatus();
     });
   });
