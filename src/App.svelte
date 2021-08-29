@@ -8,8 +8,12 @@
 	let nextMoves = [];
 
 	const handleStockfishUpdate = ({ bestMoves, bestMove, cp }) => {
+		console.log(bestMove);
 		if (cp) adv = cp 
-		if (bestMoves) bMoves = bestMoves;
+		if (bestMoves) {
+			bMoves = bestMoves;
+			bMove = null;
+		}
 		if (bestMove) bMove = bestMove;
 	}
 
@@ -32,13 +36,19 @@
 </script>
 
 <main>
-    <div id="adv">{adv}</div>
-    <div id="bestMove">{bMoves}</div>
     <div class="wrapper">
       <div id="progress"></div>
       <div id="boardcontainer">
         <div id="board"></div>
         <div>
+        	<div>
+	    <span id="adv">{adv}</span>
+	    {#if bMove}
+		    <span id="bestMove">{bMove}</span>
+		    {:else}
+		    <span id="bestMove">{bMoves}</span>
+		    {/if}
+	</div>
           <button id="previousmove" type="button" class="btn btn-primary">
           	Previous move
           </button>
@@ -46,7 +56,7 @@
           	{#each nextMoves as { name, winPercentage, winPercentageStyle, won, total}}
 				<div>
 					{name} (won {won} out of {total})
-			        <div class="progress">
+			        <div class="progress" style="width: 200px">
 			          <div class="progress-bar" role="progressbar" style={winPercentageStyle} aria-valuenow={winPercentage} aria-valuemin="0" aria-valuemax="100"></div>
 			        </div>
 			    </div>
