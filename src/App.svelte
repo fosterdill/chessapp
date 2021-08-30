@@ -11,13 +11,13 @@
 	let color;
 	const username = window.location.hash.slice(1);
 
-	const handleStockfishUpdate = ({ bestMoves, bestMove, cp }) => {
+	const handleStockfishUpdate = ({ bestMoves, bestMove, cp, depth }) => {
 		if (cp) adv = cp 
 		if (bestMoves) {
-			bMoves = bestMoves;
+			bMoves = `(${depth}) ${bestMoves}`;
 			bMove = null;
 		}
-		if (bestMove) bMove = bestMove;
+		if (bestMove) bMove = `${bestMove}`;
 	}
 
 	const handleNodeUpdate = (node) => {

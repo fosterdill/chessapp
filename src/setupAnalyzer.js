@@ -45,13 +45,17 @@ const stockfishHandler = (handleStockfishUpdate, { data }) => {
 	if (data.indexOf("bestmove") !== -1) {
 		// $bestMove.html(`⭐ ${getAlgebraicName(data.slice(9, 13), game.fen())}`);
 		//do best move logic here
-		handleStockfishUpdate({ bestMove: data, cp });
+		handleStockfishUpdate({
+			bestMove: `⭐ ${getAlgebraicName(data.slice(9, 13), game.fen())}`,
+			cp,
+			depth,
+		});
 	} else {
 		const movesList = data.slice(getPosition(data, "pv", 2)).slice(3);
 		const algebraicNames = getAlgebraicNames(game.fen(), movesList.split(" "));
 		if (algebraicNames[0]) {
 			//have access to algebraic names
-			handleStockfishUpdate({ bestMoves: algebraicNames, cp });
+			handleStockfishUpdate({ depth, bestMoves: algebraicNames, cp });
 		}
 	}
 };
