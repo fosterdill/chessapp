@@ -44,7 +44,14 @@
 		previousMove = (await setupAnalyzer(handleStockfishUpdate, handleNodeUpdate, color)).previousMove;
 	}
 
+	const handleKeyDown = (event) => {
+		if (event.key === "ArrowLeft") {
+			previousMove();
+		}
+	}
+
 </script>
+<svelte:window on:keydown={handleKeyDown} />
 
 <main>
     <div class="wrapper">
