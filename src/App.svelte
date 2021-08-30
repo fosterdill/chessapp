@@ -1,4 +1,5 @@
 <script>
+	import localForage from "localforage";
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store'
 	import setupAnalyzer from './setupAnalyzer';
@@ -6,9 +7,11 @@
 	let bMoves;
 	let bMove;
 	let nextMoves = [];
+	let previousMove;
+	let color;
+	const username = window.location.hash.slice(1);
 
 	const handleStockfishUpdate = ({ bestMoves, bestMove, cp }) => {
-		console.log(bestMove);
 		if (cp) adv = cp 
 		if (bestMoves) {
 			bMoves = bestMoves;
@@ -31,8 +34,16 @@
 
 	}
 	onMount(async () => {
-		setupAnalyzer(handleStockfishUpdate, handleNodeUpdate);
+		color = (await localForage.getItem(`${username}_currentSide`)) || "white";
+		previousMove = (await setupAnalyzer(handleStockfishUpdate, handleNodeUpdate, color)).previousMove;
 	})
+
+	const toggleColor = async () => {
+		color = color === 'white' ? 'black' : 'white';
+		localForage.setItem(`${username}_currentSide`, color);
+		previousMove = (await setupAnalyzer(handleStockfishUpdate, handleNodeUpdate, color)).previousMove;
+	}
+
 </script>
 
 <main>
@@ -49,7 +60,10 @@
 		    <span id="bestMove">{bMoves}</span>
 		    {/if}
 	</div>
-          <button id="previousmove" type="button" class="btn btn-primary">
+          <button on:click={toggleColor} id="previousmove" type="button" class="btn btn-primary">
+          	Toggle side
+          </button>
+          <button on:click={previousMove}  type="button" class="btn btn-primary">
           	Previous move
           </button>
           <div id="nextMoves">

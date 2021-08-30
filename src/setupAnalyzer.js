@@ -6,8 +6,11 @@ import { createNode } from "./data-structures";
 import { addGame } from "./data-structures";
 import { setupStorage } from "./idb";
 
+//Undo logic:
+
 const game = new Chess();
 let stockfish = new Worker("stockfish.js");
+stockfish.postMessage("setoption name Use NNUE value true");
 let waitingCommands = [];
 
 let currentNode;
@@ -189,8 +192,6 @@ const setupChessboard = (
 	handleStockfishUpdate,
 	handleNodeUpdate
 ) => {
-	localForage.setItem(`${username}_nodes_${color}`, nodes);
-
 	const root = nodes[START_FEN];
 
 	const config = {
@@ -204,41 +205,61 @@ const setupChessboard = (
 		onSnapEnd: onSnapEnd,
 	};
 	board = Chessboard("board", config);
-	board.flip();
+	if (color === "black") {
+		board.flip();
+	}
 
 	currentNode = root;
 
 	updateStatus(handleStockfishUpdate, handleNodeUpdate);
 };
 
-const main = async (handleStockfishUpdate, handleNodeUpdate) => {
-	const color = "black";
+const main = async (
+	handleStockfishUpdate,
+	handleNodeUpdate,
+	color = "white"
+) => {
 	setupStorage();
 	stockfish.onmessage = stockfishHandler.bind(null, handleStockfishUpdate);
-	stockfish.postMessage("setoption name Use NNUE value true");
+	stockfish.postMessage("stop");
 
-	stockfish.postMessage(`position startpos`);
-	stockfish.postMessage("go depth 18");
+	waitForIsReady("position startpos", "go depth 18");
 
 	const username = window.location.hash.slice(1);
 
 	let allNodes = await localForage.getItem(`${username}_nodes_${color}`);
 
+	const previousMove = () => {
+		if (game.fen() === currentNode.name && moveCounter !== 0) {
+			currentNode = moveHistory.pop();
+		}
+		if (moveCounter !== 0) moveCounter--;
+		game.undo();
+		board.position(game.fen());
+		evalFen(game.fen());
+		updateStatus(handleStockfishUpdate, handleNodeUpdate);
+	};
+
 	if (!allNodes) {
 		const worker = new Worker(
 			new URL("./workers/build-graph", import.meta.url)
 		);
-		worker.postMessage({ username, color });
-		worker.onmessage = ({ data: { nodes, done, percentage } }) => {
-			allNodes = nodes;
+		worker.postMessage({ username });
+		worker.onmessage = ({
+			data: { whiteNodes, blackNodes, done, percentage },
+		}) => {
+			allNodes = color === "white" ? whiteNodes : blackNodes;
 			if (done) {
+				localForage.setItem(`${username}_nodes_black`, blackNodes);
+				localForage.setItem(`${username}_nodes_white`, whiteNodes);
 				setupChessboard(
-					nodes,
+					allNodes,
 					username,
 					color,
 					handleStockfishUpdate,
 					handleNodeUpdate
 				);
+				return { previousMove };
 			} else {
 				//loading update here
 			}
@@ -251,35 +272,8 @@ const main = async (handleStockfishUpdate, handleNodeUpdate) => {
 			handleStockfishUpdate,
 			handleNodeUpdate
 		);
+		return { previousMove };
 	}
-
-	// $(document).ready(() => {
-	// 	$("#previousmove").click((event) => {
-	// 		event.preventDefault();
-	// 		if (game.fen() === currentNode.name && moveCounter !== 0) {
-	// 			currentNode = moveHistory.pop();
-	// 		}
-	// 		if (moveCounter !== 0) moveCounter--;
-	// 		game.undo();
-	// 		board.position(game.fen());
-	// 		evalFen(game.fen());
-	// 		updateStatus();
-	// 	});
-
-	// 	$(window).keydown((event) => {
-	// 		if (event.key === "ArrowLeft") {
-	// 			event.preventDefault();
-	// 			if (game.fen() === currentNode.name && moveCounter !== 0) {
-	// 				currentNode = moveHistory.pop();
-	// 			}
-	// 			if (moveCounter !== 0) moveCounter--;
-	// 			game.undo();
-	// 			board.position(game.fen());
-	// 			evalFen(game.fen());
-	// 			updateStatus();
-	// 		}
-	// 	});
-	// });
 };
 
 export default main;

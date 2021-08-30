@@ -1,4 +1,3 @@
-import localForage from "localforage";
 import { fetchAllGames } from "../fetches";
 import { START_FEN, getMoveName } from "../utils";
 import { addEdge, createNode } from "../data-structures/graph";
@@ -42,33 +41,43 @@ const addGame = (game, nodes, username, color) => {
   }
 };
 
-self.onmessage = ({ data: { username, color } }) => {
-  main(username, color);
+self.onmessage = ({ data: { username } }) => {
+  main(username);
 };
-
-const main = async (username, color) => {
-  const nodes = {};
-  let allGames = await fetchAllGames(username);
-  allGames = allGames.filter(
-    (game) => game[color].username === username && game.rated
-  );
-
-  nodes[START_FEN] = createNode(START_FEN);
-
-  for (let [index, game] of allGames.entries()) {
+const addAllGamesForColor = (games, nodes, username, color) => {
+  for (let [index, game] of games.entries()) {
     addGame(game, nodes, username, color);
 
-    const percentage = Math.round((100 * index) / allGames.length);
+    const percentage = Math.round((100 * index) / games.length);
     if (percentage % 20 === 0) {
       self.postMessage({
         nodes,
-        percentage: Math.round((100 * index) / allGames.length),
+        percentage: Math.round((100 * index) / games.length),
       });
     }
   }
+};
+
+const main = async (username) => {
+  const whiteNodes = {};
+  const blackNodes = {};
+  let allGames = await fetchAllGames(username);
+  const blackGames = allGames.filter(
+    (game) => game.black.username === username && game.rated
+  );
+  const whiteGames = allGames.filter(
+    (game) => game.white.username === username && game.rated
+  );
+
+  whiteNodes[START_FEN] = createNode(START_FEN);
+  blackNodes[START_FEN] = createNode(START_FEN);
+
+  addAllGamesForColor(whiteGames, whiteNodes, username, "white");
+  addAllGamesForColor(blackGames, blackNodes, username, "black");
 
   self.postMessage({
-    nodes,
+    whiteNodes,
+    blackNodes,
     done: true,
   });
 };
