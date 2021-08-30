@@ -52,20 +52,22 @@
       <div id="boardcontainer">
         <div id="board"></div>
         <div>
-        	<div>
-	    <span id="adv">{adv}</span>
-	    {#if bMove}
-		    <span id="bestMove">{bMove}</span>
-		    {:else}
-		    <span id="bestMove">{bMoves}</span>
-		    {/if}
-	</div>
           <button on:click={toggleColor} id="previousmove" type="button" class="btn btn-primary">
           	Toggle side
           </button>
           <button on:click={previousMove}  type="button" class="btn btn-primary">
           	Previous move
           </button>
+          <div class="single-line-container">
+        	<div class="single-line">
+	    <span id="adv">{adv}</span>
+	    {#if bMove}
+		    <span id="bestMove">{bMove}</span>
+		    {:else}
+		    <span id="bestMove">{bMoves}</span>
+		    {/if}
+		</div>
+	</div>
           <div id="nextMoves">
           	{#each nextMoves as { name, winPercentage, winPercentageStyle, won, total}}
 				<div>
