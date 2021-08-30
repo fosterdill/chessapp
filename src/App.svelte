@@ -36,11 +36,6 @@
 		nextMoves = nextMoves.sort((move, move2) => move2.total - move.total)
 		fenString = node.name.replace(/\s/g, '_');
 
-		if (color === 'black') {
-			fenString = fenString.replace('_w_', '_b_');
-		}
-
-
 	}
 	onMount(async () => {
 		color = (await localForage.getItem(`${username}_currentSide`)) || "white";
