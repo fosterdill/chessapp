@@ -1,4 +1,6 @@
+
 <script>
+	// Need to figure out how to get this working with 'craftyfox66'
 	import localForage from "localforage";
 	import { onMount } from 'svelte';
 	import { writable } from 'svelte/store'
@@ -9,6 +11,7 @@
 	let nextMoves = [];
 	let previousMove;
 	let color;
+	let fenString;
 	const username = window.location.hash.slice(1);
 
 	const handleStockfishUpdate = ({ bestMoves, bestMove, cp, depth }) => {
@@ -31,6 +34,12 @@
 			}
 		})
 		nextMoves = nextMoves.sort((move, move2) => move2.total - move.total)
+		fenString = node.name.replace(/\s/g, '_');
+
+		if (color === 'black') {
+			fenString = fenString.replace('_w_', '_b_');
+		}
+
 
 	}
 	onMount(async () => {
@@ -56,6 +65,7 @@
 <main>
     <div class="wrapper">
       <div id="progress"></div>
+        <a target="_blank" href="https://lichess.org/analysis/{fenString}">Lichess analysis</a>
       <div id="boardcontainer">
         <div id="board"></div>
         <div>
