@@ -38,12 +38,6 @@
 		edges = tree.currentEdges();
 	}
 
-	const handleGoBack = () => {
-		$game.undo();
-		game.update(game => game);
-		if ($game.history().length === $tree.previousNodes.length - 1) {
-			tree.undo();
-		} }
 
 
 </script>
@@ -52,7 +46,7 @@
 	<div style="position: fixed; width: 100%">
 	<div style="padding: 24px 0;">
 		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-secondary fw-bold">Toggle side</button>
-		<button on:click={handleGoBack} type="button" class="btn btn-secondary fw-bold">Previous move</button>
+		<button on:click={game.handleGoBack} type="button" class="btn btn-secondary fw-bold">Previous move</button>
 	</div>
 	<div style="display: flex">
 		<Board flipped={currentSide === 'black'} />
