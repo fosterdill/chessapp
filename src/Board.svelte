@@ -37,9 +37,9 @@
   })
 
   $: board && board.orientation(flipped ? 'black' : 'white')
-  
+
   game.subscribe(game => {
-    board && board.position(game.fen());
+    board && board.position(game.fen(), false);
   })
 </script>
 
