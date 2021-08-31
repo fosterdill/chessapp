@@ -41,8 +41,9 @@
 	const handleGoBack = () => {
 		$game.undo();
 		game.update(game => game);
-		tree.undo();
-	}
+		if ($game.history().length === $tree.previousNodes.length - 1) {
+			tree.undo();
+		} }
 
 
 </script>
