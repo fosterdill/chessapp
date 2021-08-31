@@ -48,13 +48,15 @@
 </script>
 
 <main>
+	<div style="position: fixed; width: 100%">
 	<div style="padding: 24px 0;">
-		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-primary fw-bold">Toggle side</button>
-		<button on:click={handleGoBack} type="button" class="btn btn-primary fw-bold">Previous move</button>
+		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-secondary fw-bold">Toggle side</button>
+		<button on:click={handleGoBack} type="button" class="btn btn-secondary fw-bold">Previous move</button>
 	</div>
 	<div style="display: flex">
 		<Board flipped={currentSide === 'black'} />
-		<div style="padding-left: 24px">
+		<div style="padding-left: 24px; width: 100%;">
+			<div class="my-dark">
 			<div style="padding-bottom: 12px;">
 			{#if $engine.adv}
 				{#if $engine.adv > 0}
@@ -76,12 +78,18 @@
 				🌟 {$engine.bestMove}
 			{/if}
 			</span>
+		</div>
+		</div>
+	</div>
+</div>
+<div class="rightColumn">
+	<div>
 			{#if $game &&  $tree.currentNode && $tree.currentNode.name === $game.fen()}
 				{#each edges as edge}
 					<div>
 						<span class="badge fs-6">{edge.name} (won {edge.accum.win} of {edge.accum.total})</span>
 				        <div class="progress" style="width: 400px">
-				          <div class="progress-bar" role="progressbar" style={`width: ${Math.round(100 * edge.accum.win / edge.accum.total)}%`} aria-valuenow={Math.round(100 * edge.accum.win / edge.accum.total)} aria-valuemin="0" aria-valuemax="100"></div>
+				          <div class="progress-bar bg-info" role="progressbar" style={`width: ${Math.round(100 * edge.accum.win / edge.accum.total)}%`} aria-valuenow={Math.round(100 * edge.accum.win / edge.accum.total)} aria-valuemin="0" aria-valuemax="100"></div>
 				        </div>
 				    </div>
 				{/each}
