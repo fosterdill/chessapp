@@ -22,7 +22,7 @@ const setPosition = (game) => {
 };
 
 const stockfishHandler = ({ data }) => {
-	if (data === "readyok") {
+	if (data === "readyok" && waitingCommands.length) {
 		waitingCommands.shift().forEach((command) => {
 			setTimeout(() => {
 				stockfish.postMessage(command);
