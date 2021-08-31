@@ -4,6 +4,7 @@ import { START_FEN } from "../utils";
 const tree = writable({
 	currentNode: null,
 	nodes: null,
+	previousNodes: [],
 });
 
 export default {
@@ -26,7 +27,20 @@ export default {
 			tree.update((tree) => ({
 				...tree,
 				currentNode: tree.currentNode.edges[move].to,
+				previousNodes: tree.previousNodes.concat([tree.currentNode]),
 			}));
 		}
+	},
+	undo() {
+		tree.update((tree) => {
+			return {
+				...tree,
+				previousNodes: tree.previousNodes.slice(
+					0,
+					tree.previousNodes.length - 1
+				),
+				currentNode: tree.previousNodes[tree.previousNodes.length - 1],
+			};
+		});
 	},
 };

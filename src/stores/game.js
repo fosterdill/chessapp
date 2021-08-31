@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, get } from "svelte/store";
 import Chess from "chess.js";
 import { setPosition } from "../stockfish";
 import tree from "./tree";
@@ -13,7 +13,10 @@ game.subscribe((game) => {
 
     return `${moveNumber}${dots}${value}`;
   });
-  tree.move(moveHistory[moveHistory.length - 1]);
+  const move = moveHistory[moveHistory.length - 1];
+  if (get(tree).currentNode && move in get(tree).currentNode.edges) {
+    tree.move(move);
+  }
 });
 
 export { game };

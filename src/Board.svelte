@@ -19,6 +19,7 @@
     game.update(game => game);
   }
 
+
   onMount(() => {
     const config = {
       pieceTheme: (piece) => {
@@ -36,6 +37,10 @@
   })
 
   $: board && board.orientation(flipped ? 'black' : 'white')
+  
+  game.subscribe(game => {
+    board && board.position(game.fen());
+  })
 </script>
 
 
