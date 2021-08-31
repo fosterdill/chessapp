@@ -11,6 +11,8 @@
 	let whiteNodes, blackNodes, nodes;
 	let currentSide = 'white';
 	let edges = [];
+	let lastAdv;
+
 	onMount(async () => {
 		nodes = await loadNodes(window.location.hash.slice(1));
 		whiteNodes = nodes.whiteNodes;
@@ -24,6 +26,12 @@
 
 	tree.subscribe(() => {
 		edges = tree.currentEdges();
+	})
+
+	engine.subscribe((engine) => {
+		if (engine.adv || engine.adv === 0) {
+			lastAdv = engine.adv;
+		}
 	})
 
 	const handleToggleSide = () => {
@@ -53,13 +61,13 @@
 		<div style="padding-left: 24px; width: 100%;">
 			<div class="my-dark">
 			<div style="padding-bottom: 12px;">
-			{#if $engine.adv}
-				{#if $engine.adv > 0}
-					<span class="badge bg-light text-dark fs-6">{$engine.adv}</span>
-				{:else if $engine.adv === 0}
-					<span class="badge bg-secondary fs-6">{$engine.adv}</span>
+			{#if lastAdv}
+				{#if lastAdv > 0}
+					<span class="badge bg-light text-dark fs-6">{lastAdv}</span>
+				{:else if lastAdv === 0}
+					<span class="badge bg-secondary fs-6">{lastAdv}</span>
 				{:else}
-					<span class="badge bg-dark fs-6">{$engine.adv}</span>
+					<span class="badge bg-dark fs-6">{lastAdv}</span>
 				{/if}
 			{:else}
 				<span class="badge bg-secondary fs-6">...</span>
