@@ -62,6 +62,7 @@ export default () => {
 	stockfish.onmessage = stockfishHandler;
 
 	stockfish.postMessage("uci");
+	stockfish.postMessage("isready");
 	stockfish.postMessage("setoption name Use NNUE value true");
 };
 

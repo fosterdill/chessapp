@@ -32,7 +32,7 @@
 	{/if}
 	{#each edges as edge}
 		<div>
-			{edge.name}
+			{edge.name} (won {edge.accum.win} of {edge.accum.total})
 	        <div class="progress" style="width: 200px">
 	          <div class="progress-bar" role="progressbar" style={`width: ${Math.round(100 * edge.accum.win / edge.accum.total)}%`} aria-valuenow={Math.round(100 * edge.accum.win / edge.accum.total)} aria-valuemin="0" aria-valuemax="100"></div>
 	        </div>
