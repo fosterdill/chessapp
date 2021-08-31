@@ -1,6 +1,8 @@
 <script>
   import { onMount } from 'svelte';
   import { game } from './stores/game';
+  let board;
+  export let flipped = false;
 
   const onDrop = (source, target) => {
     // see if the move is legal
@@ -30,8 +32,10 @@
       }
     };
 
-    const board = Chessboard('board', config);
+    board = Chessboard('board', config);
   })
+
+  $: board && board.orientation(flipped ? 'black' : 'white')
 </script>
 
 

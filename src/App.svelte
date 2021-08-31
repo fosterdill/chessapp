@@ -6,10 +6,14 @@
 	import startStockfish from './stockfish';
 	import engine from './stores/engine';
 	import tree from './stores/tree';
-
+	let whiteNodes, blackNodes, nodes;
+	let currentSide = 'white';
 	let edges = [];
 	onMount(async () => {
-		const { whiteNodes, blackNodes } = await loadNodes(window.location.hash.slice(1));
+		nodes = await loadNodes(window.location.hash.slice(1));
+		whiteNodes = nodes.whiteNodes;
+		blackNodes = nodes.blackNodes;
+
 		tree.loadNodes(whiteNodes);
 		edges = tree.currentEdges();
 
@@ -20,10 +24,23 @@
 		edges = tree.currentEdges();
 	})
 
+	const handleToggleSide = () => {
+		if (currentSide === 'white') {
+			tree.loadNodes(blackNodes);
+			currentSide = 'black';
+		} else {
+			tree.loadNodes(whiteNodes);
+			currentSide = 'white';
+		}
+
+		edges = tree.currentEdges();
+	}
+
 </script>
 
 <main>
-	<Board />
+	<button on:click={handleToggleSide} type="button" class="btn btn-primary">Toggle side</button>
+	<Board flipped={currentSide === 'black'} />
 	{$engine.adv || '-'}
 	{#if $engine.isWorking}
 		Line: {$engine.line}
