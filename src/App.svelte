@@ -49,25 +49,37 @@
 
 <main>
 	<div style="padding: 24px 0;">
-		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-primary">Toggle side</button>
-		<button on:click={handleGoBack} type="button" class="btn btn-primary">Previous move</button>
+		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-primary fw-bold">Toggle side</button>
+		<button on:click={handleGoBack} type="button" class="btn btn-primary fw-bold">Previous move</button>
 	</div>
 	<div style="display: flex">
 		<Board flipped={currentSide === 'black'} />
 		<div style="padding-left: 24px">
-			<span class="badge bg-secondary">
-			{#if $engine.isWorking}
-		{$engine.adv || '-'}
-				Line: {$engine.line}
+			<div style="padding-bottom: 12px;">
+			{#if $engine.adv}
+				{#if $engine.adv > 0}
+					<span class="badge bg-light text-dark fs-6">{$engine.adv}</span>
+				{:else if $engine.adv === 0}
+					<span class="badge bg-secondary fs-6">{$engine.adv}</span>
+				{:else}
+					<span class="badge bg-dark fs-6">{$engine.adv}</span>
+				{/if}
 			{:else}
-		{$engine.adv || '-'}
-				Best move: {$engine.bestMove}
+				<span class="badge bg-secondary fs-6">...</span>
+
 			{/if}
-		</span>
+			</div>
+			<span style="margin-bottom: 12px" class="badge bg-secondary fs-6">
+			{#if $engine.isWorking}
+				🤔 {$engine.line}
+			{:else}
+				🌟 {$engine.bestMove}
+			{/if}
+			</span>
 			{#if $game &&  $tree.currentNode && $tree.currentNode.name === $game.fen()}
 				{#each edges as edge}
 					<div>
-						<span class="badge">{edge.name} (won {edge.accum.win} of {edge.accum.total})</span>
+						<span class="badge fs-6">{edge.name} (won {edge.accum.win} of {edge.accum.total})</span>
 				        <div class="progress" style="width: 400px">
 				          <div class="progress-bar" role="progressbar" style={`width: ${Math.round(100 * edge.accum.win / edge.accum.total)}%`} aria-valuenow={Math.round(100 * edge.accum.win / edge.accum.total)} aria-valuemin="0" aria-valuemax="100"></div>
 				        </div>

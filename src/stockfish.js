@@ -53,7 +53,7 @@ const stockfishHandler = ({ data }) => {
 		);
 		if (algebraicNames[0]) {
 			//have access to algebraic names
-			engine.setLine(algebraicNames, cp);
+			engine.setLine(algebraicNames.slice(0, 8), cp);
 		}
 	}
 };
