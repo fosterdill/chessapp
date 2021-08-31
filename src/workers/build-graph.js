@@ -41,9 +41,6 @@ const addGame = (game, nodes, username, color) => {
   }
 };
 
-self.onmessage = ({ data: { username } }) => {
-  main(username);
-};
 const addAllGamesForColor = (games, nodes, username, color) => {
   for (let [index, game] of games.entries()) {
     addGame(game, nodes, username, color);
@@ -58,14 +55,14 @@ const addAllGamesForColor = (games, nodes, username, color) => {
   }
 };
 
-const main = async (username) => {
+self.onmessage = ({ data: { username, games } }) => {
   const whiteNodes = {};
   const blackNodes = {};
-  let allGames = await fetchAllGames(username);
-  const blackGames = allGames.filter(
+
+  const blackGames = games.filter(
     (game) => game.black.username === username && game.rated
   );
-  const whiteGames = allGames.filter(
+  const whiteGames = games.filter(
     (game) => game.white.username === username && game.rated
   );
 
@@ -78,6 +75,5 @@ const main = async (username) => {
   self.postMessage({
     whiteNodes,
     blackNodes,
-    done: true,
   });
 };
