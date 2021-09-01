@@ -2,7 +2,6 @@
   import { onMount } from 'svelte';
   import { game } from './stores/game';
   let board;
-  export let flipped = false;
 
   const onDrop = (source, target) => {
     // see if the move is legal
@@ -36,20 +35,9 @@
     board = Chessboard('board', config);
   })
 
-  $: board && board.orientation(flipped ? 'black' : 'white');
+  $: board && board.position($game.fen());
 
-  game.subscribe(game => {
-    board && board.position(game.fen(), false);
-  })
-
-  const handleKeyDown = (event) => {
-    if (event.key === 'ArrowLeft') {
-        game.handleGoBack();
-    }
-  }
 </script>
-
-<svelte:window on:keydown={handleKeyDown} />
 
 <div id="board">
 </div>

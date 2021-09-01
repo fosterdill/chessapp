@@ -3,17 +3,17 @@
 	import { onMount } from 'svelte';
 	import loadNodes from './load-nodes';
 	import Board from './Board.svelte';
-	import startStockfish from './stockfish';
+	import startStockfish, { setPosition } from './stockfish';
 	import engine from './stores/engine';
 	import { game } from './stores/game';
 	import { nodes } from './stores/nodes';
-	import tree from './stores/tree';
+	import { currentEdges, tree } from './stores/tree';
 	import {START_FEN} from './utils';
 
 	let whiteNodes, blackNodes;
 	let currentSide = 'white';
 	let lastAdv;
-	let edges = [];
+
 
 	onMount(async () => {
 		const allNodes = await loadNodes(window.location.hash.slice(1));
@@ -23,10 +23,10 @@
 		nodes.set(whiteNodes[START_FEN]);
 
 		startStockfish();
-	})
 
-	tree.subscribe(($tree) => {
-		edges = tree.currentEdges();
+		game.subscribe((game) => {
+			setPosition(game);
+		})
 	})
 
 	engine.subscribe(($engine) => {
@@ -35,30 +35,20 @@
 		}
 	})
 
-	const handleToggleSide = () => {
-		// if (currentSide === 'white') {
-		// 	tree.loadNodes(blackNodes);
-		// 	currentSide = 'black';
-		// } else {
-		// 	tree.loadNodes(whiteNodes);
-		// 	currentSide = 'white';
-		// }
-
-		// edges = tree.currentEdges();
+	const handleGoBack = () => {
+		$game.undo();
+		game.set($game);
 	}
-
-
 
 </script>
 
 <main>
 	<div style="position: fixed; width: 100%">
 	<div style="padding: 24px 0;">
-		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-secondary fw-bold">Toggle side</button>
-		<button on:click={() => {}} type="button" class="btn btn-secondary fw-bold">Previous move</button>
+		<button on:click={handleGoBack} type="button" class="btn btn-secondary fw-bold">Previous move</button>
 	</div>
 	<div style="display: flex">
-		<Board flipped={currentSide === 'black'} />
+		<Board />
 		<div style="padding-left: 24px; width: 100%;">
 			<div class="my-dark">
 			<div style="padding-bottom: 12px;">
@@ -89,7 +79,7 @@
 <div class="rightColumn">
 	<div>
 			{#if $game &&  $tree.currentNode && $tree.currentNode.name === $game.fen()}
-				{#each edges as edge}
+				{#each currentEdges($tree) as edge}
 					<div>
 						<span class="badge fs-6">{edge.name} (won {edge.accum.win} of {edge.accum.total})</span>
 				        <div class="progress" style="width: 400px">
