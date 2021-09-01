@@ -6,44 +6,45 @@
 	import startStockfish from './stockfish';
 	import engine from './stores/engine';
 	import { game } from './stores/game';
+	import { nodes } from './stores/nodes';
 	import tree from './stores/tree';
 	import {START_FEN} from './utils';
-	let whiteNodes, blackNodes, nodes;
+
+	let whiteNodes, blackNodes;
 	let currentSide = 'white';
-	let edges = [];
 	let lastAdv;
+	let edges = [];
 
 	onMount(async () => {
-		nodes = await loadNodes(window.location.hash.slice(1));
-		whiteNodes = nodes.whiteNodes;
-		blackNodes = nodes.blackNodes;
+		const allNodes = await loadNodes(window.location.hash.slice(1));
+		whiteNodes = allNodes.whiteNodes;
+		blackNodes = allNodes.blackNodes;
 
-		tree.loadNodes(whiteNodes);
-		edges = tree.currentEdges();
+		nodes.set(whiteNodes[START_FEN]);
 
 		startStockfish();
 	})
 
-	tree.subscribe(() => {
+	tree.subscribe(($tree) => {
 		edges = tree.currentEdges();
 	})
 
-	engine.subscribe((engine) => {
-		if (engine.adv || engine.adv === 0) {
-			lastAdv = engine.adv;
+	engine.subscribe(($engine) => {
+		if ($engine.adv || $engine.adv === 0) {
+			lastAdv = $engine.adv;
 		}
 	})
 
 	const handleToggleSide = () => {
-		if (currentSide === 'white') {
-			tree.loadNodes(blackNodes);
-			currentSide = 'black';
-		} else {
-			tree.loadNodes(whiteNodes);
-			currentSide = 'white';
-		}
+		// if (currentSide === 'white') {
+		// 	tree.loadNodes(blackNodes);
+		// 	currentSide = 'black';
+		// } else {
+		// 	tree.loadNodes(whiteNodes);
+		// 	currentSide = 'white';
+		// }
 
-		edges = tree.currentEdges();
+		// edges = tree.currentEdges();
 	}
 
 
@@ -54,7 +55,7 @@
 	<div style="position: fixed; width: 100%">
 	<div style="padding: 24px 0;">
 		<button disabled={$tree.currentNode && $tree.currentNode.name !== START_FEN} on:click={handleToggleSide} type="button" class="btn btn-secondary fw-bold">Toggle side</button>
-		<button on:click={game.handleGoBack} type="button" class="btn btn-secondary fw-bold">Previous move</button>
+		<button on:click={() => {}} type="button" class="btn btn-secondary fw-bold">Previous move</button>
 	</div>
 	<div style="display: flex">
 		<Board flipped={currentSide === 'black'} />

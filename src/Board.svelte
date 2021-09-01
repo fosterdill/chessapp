@@ -16,7 +16,7 @@
     // illegal move
     if (move === null) return "snapback";
 
-    game.update(game => game);
+    game.set($game);
   }
 
 
@@ -36,7 +36,7 @@
     board = Chessboard('board', config);
   })
 
-  $: board && board.orientation(flipped ? 'black' : 'white')
+  $: board && board.orientation(flipped ? 'black' : 'white');
 
   game.subscribe(game => {
     board && board.position(game.fen(), false);
