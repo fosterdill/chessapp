@@ -1,6 +1,6 @@
 import localForage from "localforage";
 
-import { fetchAllGames } from "./fetches";
+import { fetchAllGames } from "./fetches/chesscom";
 import { START_FEN, getMoveName } from "./utils";
 import { addEdge, createNode } from "./data-structures/graph";
 

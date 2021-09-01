@@ -1,1 +1,0 @@
-export { fetchAllGames } from "./chesscom";

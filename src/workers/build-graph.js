@@ -1,4 +1,3 @@
-import { fetchAllGames } from "../fetches";
 import { START_FEN, getMoveName } from "../utils";
 import { addEdge, createNode } from "../data-structures/graph";
 import Chess from "chess.js";
@@ -46,12 +45,6 @@ const addAllGamesForColor = (games, nodes, username, color) => {
     addGame(game, nodes, username, color);
 
     const percentage = Math.round((100 * index) / games.length);
-    // if (percentage % 20 === 0) {
-    //   self.postMessage({
-    //     nodes,
-    //     percentage: Math.round((100 * index) / games.length),
-    //   });
-    // }
   }
 };
 
