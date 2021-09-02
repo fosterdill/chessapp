@@ -59,6 +59,16 @@
     align-items: center;
   }
 
+  @media only screen and (max-width: 600px) {
+    .mainPage {
+      flex-direction:  column;
+    }
+
+    .mainSection {
+      padding-top:  24px;
+    }
+  }
+
   .mainSection {
     width:  100%;
     height:  80%;
@@ -76,7 +86,7 @@
     <div>
   		<Board />
     </div>
-    <div class="mainSection mx-5">
+    <div class="mainSection px-5">
       <div class="mb-2">
         <button on:click={handleGoBack} type="button" class="btn btn-secondary fw-bold">Back</button>
       </div>
