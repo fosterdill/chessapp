@@ -1,5 +1,6 @@
 
 <script>
+  import { fade } from 'svelte/transition';
 	import { onMount } from 'svelte';
 	import loadNodes from './load-nodes';
 	import Board from './Board.svelte';
@@ -113,7 +114,7 @@
       <div class="progressRows">
         {#if $game &&  $tree.currentNode && $tree.currentNode.name === $game.fen()}
           {#each currentEdges($tree) as edge}
-            <div class="mb-2">
+            <div transition:fade class="mb-2">
               <span class="badge fs-6">{edge.name} (won {edge.accum.win} of {edge.accum.total})</span>
                   <div class="progress">
                     <div class="progress-bar bg-info" role="progressbar" style={`width: ${Math.round(100 * edge.accum.win / edge.accum.total)}%`} aria-valuenow={Math.round(100 * edge.accum.win / edge.accum.total)} aria-valuemin="0" aria-valuemax="100"></div>
