@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { game } from './stores/game';
   let board;
+  let boardElement;
 
   const onDrop = (source, target) => {
     // see if the move is legal
@@ -33,11 +34,19 @@
     };
 
     board = Chessboard('board', config);
+    boardElement.style.width = `${Math.min(window.innerHeight, window.innerWidth) * 0.8}px`;
+    board.resize();
   })
 
   $: board && board.position($game.fen());
 
 </script>
 
-<div id="board">
+<style>
+  #board {
+    margin: 0 24px;
+  }
+</style>
+
+<div bind:this={boardElement} id="board">
 </div>

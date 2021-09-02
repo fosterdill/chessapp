@@ -1,28 +1,6 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-      #board {
-        width: 40%;
-      }
-
-      #boardcontainer {
-        width: 100%;
-        display: flex;
-      }
-      @media only screen and (max-width: 800px) {
-        #boardcontainer {
-          flex-direction: column;
-        }
-
-        #board {
-          width: 100%;
-        }
-      }
-      .wrapper {
-        overscroll-behavior: none;
-      }
-    </style>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Chessapp</title>
@@ -50,7 +28,8 @@
       integrity="sha384-8Vi8VHwn3vjQ9eUHUxex3JSN/NFqUg3QbPyX8kWyb93+8AC/pPWTzj+nHtbC5bxD"
       crossorigin="anonymous"
     ></script>
-  <script defer src="index.bundle.js"></script></head>
+    <script defer src="index.bundle.js"></script>
+  </head>
   <body>
     <div id="adv"></div>
     <div id="bestMove">Analysis</div>
