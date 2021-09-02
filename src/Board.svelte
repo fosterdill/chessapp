@@ -40,6 +40,12 @@
 
   $: board && board.position($game.fen());
 
+  const handleGoBack = (event) => {
+    if (event.key === 'ArrowLeft') {
+      $game.undo();
+      game.set($game);
+    }
+  };
 </script>
 
 <style>
@@ -47,6 +53,7 @@
     margin: 0 24px;
   }
 </style>
+<svelte:window on:keydown={handleGoBack} />
 
 <div bind:this={boardElement} id="board">
 </div>
